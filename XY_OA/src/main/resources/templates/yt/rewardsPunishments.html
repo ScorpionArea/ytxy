@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head>
+    <meta charset="UTF-8">
+    <title>员工信息</title>
+    <link rel="stylesheet" type="text/css" href="../js/jquery-easyui-1.8.5/themes/default/easyui.css">
+    <link rel="stylesheet" type="text/css" href="../js/jquery-easyui-1.8.5/themes/icon.css">
+    <link rel="stylesheet" type="text/css" href="../js/jquery-easyui-1.8.5/demo/demo.css">
+    <script type="text/javascript" src="../js/jquery-easyui-1.8.5/jquery.min.js"></script>
+    <script type="text/javascript" src="../js/jquery-easyui-1.8.5/jquery.easyui.min.js"></script>
+    <script type="text/javascript" src="../js/easyui-ext/jquery.edatagrid.js"></script>
+    <script type="text/javascript" src="../js/jquery-easyui-1.8.5/locale/easyui-lang-zh_CN.js"></script>
+    <script type="text/javascript" th:inline="none">
+        $(function () {
+            //Add
+            $('#rewardsPunishments_tb_add').bind('click', function () {
+                $('#rewardsPunishmentsDatagrid').edatagrid('addRow');
+            });
+            //Edit
+            $('#rewardsPunishments_tb_edit').bind('click', function () {
+                var row = $('#rewardsPunishmentsDatagrid').edatagrid('getSelected');
+                if (row != null) {
+                    var index = $('#rewardsPunishmentsDatagrid').edatagrid('getRowIndex', row);
+                    $('#rewardsPunishmentsDatagrid').edatagrid('editRow', index);
+                }
+            });
+            //Cancel
+            $('#rewardsPunishments_tb_cancel').bind('click', function () {
+                var row = $('#rewardsPunishmentsDatagrid').edatagrid('getSelected');
+                if (row != null) {
+                    var index = $('#rewardsPunishmentsDatagrid').edatagrid('getRowIndex', row);
+                    $('#rewardsPunishmentsDatagrid').edatagrid('destroyRow', index);
+                }
+            });
+            $('#rewardsPunishmentsDatagrid').edatagrid({
+                idField: 'rpId',
+                autoSave: true,
+                url: '/RewardsPunishmentsControl/find',
+                saveUrl: '/RewardsPunishmentsControl/save',
+                updateUrl: '/RewardsPunishmentsControl/update',
+                destroyUrl: '/RewardsPunishmentsControl/delete',
+                sortName: 'rpDate',
+                sortOrder: 'asc',
+                toolbar: '#rewardsPunishments_tb',
+                onError: function (index, row) {
+                    if (row.textStatus == 'error') {
+                        $.messager.show({
+                            title: 'Error',
+                            msg: row.jqXHR.responseText,
+                            showType: 'show'
+                        });
+                    }
+                },
+                columns: [[
+                    {
+                        field: 'rpId',
+                        title: 'rpId',
+                        align: 'center',
+                        hidden: true
+                    },
+                    {
+                        field: 'rpDate',
+                        title: '奖惩时间',
+                        align: 'center',
+                        editor: {type: 'datebox', options: {required: true}}
+                    },
+                    {
+                        field: 'empCode',
+                        title: '员工名称',
+                        align: 'center',
+                        formatter: function (value, row, index) {
+                            if (row.empName != null) {
+                                return row.empName;
+                            } else {
+                                return value;
+                            }
+                        },
+                        editor: {
+                            type: 'combobox', options: {
+                                valueField: 'empCode',
+                                textField: 'empName',
+                                method: 'post',
+                                url: '../EmpInfoControl/comboBox',
+                                required: true
+                            }
+                        }
+                    },
+                    {
+                        field: 'rpType',
+                        title: '奖/罚',
+                        align: 'center',
+                        width: 70,
+                        editor: {
+                            type: 'combobox', options: {
+                                required: true,
+                                panelWidth: 70,
+                                valueField: 'label',
+                                textField: 'value',
+                                data: [{
+                                    label: '奖励',
+                                    value: '奖励'
+                                }, {
+                                    label: '处罚',
+                                    value: '处罚'
+                                }, {
+                                    label: '加班',
+                                    value: '加班'
+                                }, {
+                                    label: '请假',
+                                    value: '请假'
+                                }]
+                            }
+                        }
+                    }
+                    ,
+                    {
+                        field: 'rpNum',
+                        title: '数额',
+                        align: 'center',
+                        editor: {type: 'numberbox'}
+                    }
+                    ,
+                    {
+                        field: 'rpRemark',
+                        title: '备注',
+                        align: 'center',
+                        editor: {type: 'validatebox'}
+                    }
+                    ,
+                    {
+                        field: 'creator',
+                        title: '创建人',
+                        align: 'center',
+                        width: 80
+                    }
+                    ,
+                    {
+                        field: 'createdTim',
+                        title: '创建时间',
+                        align: 'center',
+                        width: 170
+                    }
+                    ,
+                    {
+                        field: 'changer',
+                        title: '修改人',
+                        align: 'center',
+                        width: 80
+                    }
+                    ,
+                    {
+                        field: 'changedTim',
+                        title: '修改时间',
+                        align: 'center',
+                        width: 170
+                    }
+                ]],
+                rownumbers: true,
+                pageSize: 20,
+                pagination: true
+            });
+        });
+    </script>
+</head>
+<body>
+<div id="rewardsPunishments_tb">
+    <shiro:hasPermission name="rP:save"><a id="rewardsPunishments_tb_add" href="#" class="easyui-linkbutton"
+                                           iconCls="icon-add"
+                                           plain="true">Add</a></shiro:hasPermission>
+    <shiro:hasPermission name="rP:update"><a id="rewardsPunishments_tb_edit" href="#" class="easyui-linkbutton"
+                                             iconCls="icon-edit"
+                                             plain="true">Edit</a></shiro:hasPermission>
+    <shiro:hasPermission name="rP:delete"><a id="rewardsPunishments_tb_cancel" href="#" class="easyui-linkbutton"
+                                             iconCls="icon-cancel"
+                                             plain="true">Cancel</a></shiro:hasPermission>
+</div>
+<table id="rewardsPunishmentsDatagrid"></table>
+</body>
+</html>

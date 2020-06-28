@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head>
+    <meta charset="UTF-8">
+    <title>员工信息</title>
+    <link rel="stylesheet" type="text/css" href="../js/jquery-easyui-1.8.5/themes/default/easyui.css">
+    <link rel="stylesheet" type="text/css" href="../js/jquery-easyui-1.8.5/themes/icon.css">
+    <link rel="stylesheet" type="text/css" href="../js/jquery-easyui-1.8.5/demo/demo.css">
+    <script type="text/javascript" src="../js/jquery-easyui-1.8.5/jquery.min.js"></script>
+    <script type="text/javascript" src="../js/jquery-easyui-1.8.5/jquery.easyui.min.js"></script>
+    <script type="text/javascript" src="../js/easyui-ext/jquery.edatagrid.js"></script>
+    <script type="text/javascript" src="../js/jquery-easyui-1.8.5/locale/easyui-lang-zh_CN.js"></script>
+    <script type="text/javascript" th:inline="none">
+        $(function () {
+            //Add
+            $('#performance_tb_add').bind('click', function () {
+                $('#performanceDatagrid').edatagrid('addRow');
+            });
+            //Edit
+            $('#performance_tb_edit').bind('click', function () {
+                var row = $('#performanceDatagrid').edatagrid('getSelected');
+                if (row != null) {
+                    var index = $('#performanceDatagrid').edatagrid('getRowIndex', row);
+                    $('#performanceDatagrid').edatagrid('editRow', index);
+                }
+            });
+            //Cancel
+            $('#performance_tb_cancel').bind('click', function () {
+                var row = $('#performanceDatagrid').edatagrid('getSelected');
+                if (row != null) {
+                    var index = $('#performanceDatagrid').edatagrid('getRowIndex', row);
+                    $('#performanceDatagrid').edatagrid('destroyRow', index);
+                }
+            });
+            $('#performanceDatagrid').edatagrid({
+                idField: 'perfId',
+                autoSave: true,
+                url: '/PerformanceControl/find',
+                saveUrl: '/PerformanceControl/save',
+                updateUrl: '/PerformanceControl/update',
+                destroyUrl: '/PerformanceControl/delete',
+                sortName: 'perfCode',
+                sortOrder: 'asc',
+                toolbar: '#performance_tb',
+                onError: function (index, row) {
+                    if (row.textStatus == 'error') {
+                        $.messager.show({
+                            title: 'Error',
+                            msg: row.jqXHR.responseText,
+                            showType: 'show'
+                        });
+                    }
+                },
+                columns: [[
+                    {
+                        field: 'perfId',
+                        title: 'perfId',
+                        align: 'center',
+                        hidden: true,
+                        rowspan: 2,
+                    }
+                    ,
+                    {
+                        field: 'perfCode',
+                        title: 'perfCode',
+                        align: 'center',
+                        editor: {type: 'validatebox', options: {required: true}},
+                        rowspan: 2,
+                    },
+                    {
+                        field: 'perfName',
+                        title: 'perfName',
+                        align: 'center',
+                        editor: {type: 'validatebox', options: {required: true}},
+                        rowspan: 2,
+                    },
+                    {title: '完成率≤50%', colspan: 2},
+                    {title: '50%≤完成率≤80%', colspan: 2},
+                    {title: '80%≤完成率≤100%', colspan: 2},
+                    {title: '100%≤完成率', colspan: 2},
+                    {
+                        field: 'creator',
+                        title: '创建人',
+                        align: 'center',
+                        width: 80,
+                        rowspan: 2,
+                    }
+                    ,
+                    {
+                        field: 'createdTim',
+                        title: '创建时间',
+                        align: 'center',
+                        width: 170,
+                        rowspan: 2,
+                    }
+                    ,
+                    {
+                        field: 'changer',
+                        title: '修改人',
+                        align: 'center',
+                        width: 80,
+                        rowspan: 2,
+                    }
+                    ,
+                    {
+                        field: 'changedTim',
+                        title: '修改时间',
+                        align: 'center',
+                        width: 170,
+                        rowspan: 2,
+                    }
+                ], [
+                    {
+                        field: 'per05',
+                        title: '个人销售额的提成',
+                        align: 'center',
+                        editor: {type: 'validatebox'}
+                    }
+                    ,
+                    {
+                        field: 'job05',
+                        title: '岗位工资考核方式',
+                        align: 'center',
+                        editor: {type: 'validatebox'}
+                    }
+                    ,
+                    {
+                        field: 'per58',
+                        title: '个人销售额的提成',
+                        align: 'center',
+                        editor: {type: 'validatebox'}
+                    }
+                    ,
+                    {
+                        field: 'job58',
+                        title: '岗位工资考核方式',
+                        align: 'center',
+                        editor: {type: 'validatebox'}
+                    }
+                    ,
+                    {
+                        field: 'per810',
+                        title: '个人销售额的提成',
+                        align: 'center',
+                        editor: {type: 'validatebox'}
+                    }
+                    ,
+                    {
+                        field: 'job810',
+                        title: '岗位工资考核方式',
+                        align: 'center',
+                        editor: {type: 'validatebox'}
+                    }
+                    ,
+                    {
+                        field: 'per10',
+                        title: '个人销售额的提成',
+                        align: 'center',
+                        editor: {type: 'validatebox'}
+                    }
+                    ,
+                    {
+                        field: 'job10',
+                        title: '岗位工资考核方式',
+                        align: 'center',
+                        editor: {type: 'validatebox'}
+                    }
+                ]],
+                rownumbers: true,
+                pageSize: 20,
+                pagination: true
+            });
+        });
+    </script>
+</head>
+<body>
+<div id="performance_tb">
+    <shiro:hasPermission name="perf:save"><a id="performance_tb_add" href="#" class="easyui-linkbutton"
+                                             iconCls="icon-add"
+                                             plain="true">Add</a></shiro:hasPermission>
+    <shiro:hasPermission name="perf:update"><a id="performance_tb_edit" href="#" class="easyui-linkbutton"
+                                               iconCls="icon-edit"
+                                               plain="true">Edit</a></shiro:hasPermission>
+    <shiro:hasPermission name="perf:delete"><a id="performance_tb_cancel" href="#" class="easyui-linkbutton"
+                                               iconCls="icon-cancel"
+                                               plain="true">Cancel</a></shiro:hasPermission>
+</div>
+<table id="performanceDatagrid"></table>
+</body>
+</html>

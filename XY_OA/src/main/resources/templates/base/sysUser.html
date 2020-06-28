@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head>
+    <meta charset="UTF-8">
+    <title>用户维护</title>
+    <link rel="stylesheet" type="text/css" href="../js/jquery-easyui-1.8.5/themes/default/easyui.css">
+    <link rel="stylesheet" type="text/css" href="../js/jquery-easyui-1.8.5/themes/icon.css">
+    <link rel="stylesheet" type="text/css" href="../js/jquery-easyui-1.8.5/demo/demo.css">
+    <script type="text/javascript" src="../js/jquery-easyui-1.8.5/jquery.min.js"></script>
+    <script type="text/javascript" src="../js/jquery-easyui-1.8.5/jquery.easyui.min.js"></script>
+    <script type="text/javascript" src="../js/easyui-ext/jquery.edatagrid.js"></script>
+    <script type="text/javascript" src="../js/jquery-easyui-1.8.5/locale/easyui-lang-zh_CN.js"></script>
+    <script type="text/javascript" th:inline="none">
+        $(function () {
+            //Add
+            $('#btn-add').bind('click', function () {
+                $('#sysUserDatagrid').edatagrid('addRow');
+            });
+            //Edit
+            $('#btn-edit').bind('click', function () {
+                var row = $('#sysUserDatagrid').edatagrid('getSelected');
+                if (row != null) {
+                    var index = $('#sysUserDatagrid').edatagrid('getRowIndex', row);
+                    $('#sysUserDatagrid').edatagrid('editRow', index);
+                }
+            });
+            //Cancel
+            $('#btn-cancel').bind('click', function () {
+                var row = $('#sysUserDatagrid').edatagrid('getSelected');
+                if (row != null) {
+                    var index = $('#sysUserDatagrid').edatagrid('getRowIndex', row);
+                    $('#sysUserDatagrid').edatagrid('destroyRow', index);
+                }
+            });
+            $('#sysUserDatagrid').edatagrid({
+                idField: 'userId',
+                autoSave: true,
+                url: '/SysUserControl/find',
+                saveUrl: '/SysUserControl/save',
+                updateUrl: '/SysUserControl/update',
+                destroyUrl: '/SysUserControl/delete',
+                sortName: 'userCode',
+                sortOrder: 'asc',
+                toolbar: '#sysUserDatagrid_tb',
+                onSelect: function (index, row) {
+                    $('#sysRoleDatagrid').edatagrid('load', {userCode: row.userCode});
+                },
+                onSave: function (index, row) {
+                },
+                onError: function (index, row) {
+                    if (row.textStatus == 'error') {
+                        $.messager.show({
+                            title: 'Error',
+                            msg: row.jqXHR.responseText,
+                            showType: 'show'
+                        });
+                    }
+                },
+                columns: [[
+                    {
+                        field: 'userId',
+                        title: 'userId',
+                        align: 'center',
+                        hidden: true,
+                    },
+                    {
+                        field: 'userCode',
+                        title: '用户编号',
+                        align: 'center',
+                        sortable: true,
+                        editor: {type: 'validatebox', options: {required: true}}
+                    },
+                    {
+                        field: 'userName',
+                        title: '用户名称',
+                        align: 'center',
+                        editor: {type: 'validatebox', options: {required: true}}
+                    },
+                    {
+                        field: 'password',
+                        title: '用户密码',
+                        align: 'center',
+                        editor: {type: 'validatebox', options: {required: true}}
+                    }
+                    ,
+                    {
+                        field: 'userState',
+                        title: '是否被锁',
+                        align: 'center',
+                        editor: {type: 'validatebox'}
+                    }
+                    ,
+                    {
+                        field: 'description',
+                        title: '描述',
+                        align: 'center',
+                        editor: {type: 'validatebox'}
+                    }
+                    ,
+                    {
+                        field: 'creator',
+                        title: '创建人',
+                        align: 'center',
+                        width: 80
+                    }
+                    ,
+                    {
+                        field: 'createdTim',
+                        title: '创建时间',
+                        align: 'center',
+                        width: 170
+                    }
+                    ,
+                    {
+                        field: 'changer',
+                        title: '修改人',
+                        align: 'center',
+                        width: 80
+                    }
+                    ,
+                    {
+                        field: 'changedTim',
+                        title: '修改时间',
+                        align: 'center',
+                        width: 170
+                    }
+                ]],
+                rownumbers: true,
+                pageSize: 20,
+                pagination: true
+            });
+            //保存
+            $('#btn-save').bind('click', function () {
+                var getSelected = $('#sysUserDatagrid').datagrid('getSelected');
+                if (getSelected == null) {
+                    $.messager.alert('Warning', '请先选择用户');
+                    return false;
+                }
+                var getChecked = $('#sysRoleDatagrid').datagrid('getChecked');
+                $.each(getChecked, function (index, item) {
+                    $.each(item.sysPermissions, function (index1, item1) {
+                        delete item1.children;
+                    });
+                });
+                getSelected.sysRoles = getChecked;
+                $.ajax({
+                    url: '/UserRoleControl/save',
+                    contentType: "application/json",
+                    type: "POST",
+                    data: JSON.stringify(getSelected),
+                    success: function (data) {
+                        $.messager.show({
+                            title: 'Ok',
+                            msg: '操作成功',
+                            showType: 'show'
+                        });
+                        //$('#sysRoleDatagrid').edatagrid('load', {userCode: data.userCode});
+                    }
+                })
+            });
+            $('#sysRoleDatagrid').datagrid({
+                url: '/UserRoleControl/find',
+                sortName: 'roleCode',
+                sortOrder: 'asc',
+                singleSelect: false,
+                toolbar: '#tb',
+                onLoadSuccess: function (data) {
+                    if (data) {
+                        $.each(data.rows, function (index, item) {
+                                if (item.ck) {
+                                    $('#sysRoleDatagrid').edatagrid('checkRow', index);
+                                }
+                            }
+                        );
+                    }
+                },
+                columns: [[
+                    {
+                        field: 'ck',
+                        checkbox: true,
+                    },
+                    {
+                        field: 'roleId',
+                        title: 'roleId',
+                        width: 80,
+                        hidden: true,
+                    },
+                    {
+                        field: 'roleCode',
+                        title: '角色编号',
+                        width: 80,
+                        sortable: true,
+                        editor: {type: 'validatebox', options: {required: true}}
+                    },
+                    {
+                        field: 'roleName',
+                        title: '角色名称',
+                        width: 100,
+                        editor: {type: 'validatebox', options: {required: true}}
+                    },
+                    {
+                        field: 'roleState',
+                        title: '是否被锁',
+                        width: 80,
+                        editor: {type: 'validatebox'}
+                    }
+                    ,
+                    {
+                        field: 'description',
+                        title: '描述',
+                        width: 80,
+                        editor: {type: 'validatebox'}
+                    }
+                    ,
+                    {
+                        field: 'creator',
+                        title: '创建人',
+                        width: 80,
+                    }
+                    ,
+                    {
+                        field: 'createdTim',
+                        title: '创建时间',
+                        width: 170,
+                    }
+                    ,
+                    {
+                        field: 'changer',
+                        title: '修改人',
+                        width: 80,
+                    }
+                    ,
+                    {
+                        field: 'changedTim',
+                        title: '修改时间',
+                        width: 170,
+                    }
+                ]],
+                rownumbers: true,
+                pageSize: 20,
+                pagination: true
+            });
+        });
+    </script>
+</head>
+<body class="easyui-layout" style="width: 100%;height: 100%">
+<div data-options="region:'west',title:'用户',split:true" style="width:40%;">
+    <div id="sysUserDatagrid_tb">
+        <shiro:hasPermission name="sysUser:add"><a id="btn-add" href="#" class="easyui-linkbutton" iconCls="icon-add"
+                                                   plain="true">Add</a></shiro:hasPermission>
+        <shiro:hasPermission name="sysUser:update"><a id="btn-edit" href="#" class="easyui-linkbutton"
+                                                      iconCls="icon-edit"
+                                                      plain="true">Edit</a></shiro:hasPermission>
+        <shiro:hasPermission name="sysUser:delete"><a id="btn-cancel" href="#" class="easyui-linkbutton"
+                                                      iconCls="icon-cancel"
+                                                      plain="true">Cancel</a></shiro:hasPermission>
+    </div>
+    <table id="sysUserDatagrid"></table>
+</div>
+<div data-options="region:'center',title:'角色授权'" style="width:60%;">
+    <div id="tb">
+        <shiro:hasPermission name="userRole:save"><a id="btn-save" href="#" class="easyui-linkbutton"
+                                                     iconCls="icon-save"
+                                                     plain="true">Save</a></shiro:hasPermission>
+    </div>
+    <table id="sysRoleDatagrid"></table>
+</div>
+</body>
+</html>

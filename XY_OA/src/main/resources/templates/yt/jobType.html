@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head>
+    <meta charset="UTF-8">
+    <title>员工信息</title>
+    <link rel="stylesheet" type="text/css" href="../js/jquery-easyui-1.8.5/themes/default/easyui.css">
+    <link rel="stylesheet" type="text/css" href="../js/jquery-easyui-1.8.5/themes/icon.css">
+    <link rel="stylesheet" type="text/css" href="../js/jquery-easyui-1.8.5/demo/demo.css">
+    <script type="text/javascript" src="../js/jquery-easyui-1.8.5/jquery.min.js"></script>
+    <script type="text/javascript" src="../js/jquery-easyui-1.8.5/jquery.easyui.min.js"></script>
+    <script type="text/javascript" src="../js/easyui-ext/jquery.edatagrid.js"></script>
+    <script type="text/javascript" src="../js/jquery-easyui-1.8.5/locale/easyui-lang-zh_CN.js"></script>
+    <script type="text/javascript" th:inline="none">
+        $(function () {
+            //Add
+            $('#jobType_tb_add').bind('click', function () {
+                $('#jobTypeDatagrid').edatagrid('addRow');
+            });
+            //Edit
+            $('#jobType_tb_edit').bind('click', function () {
+                var row = $('#jobTypeDatagrid').edatagrid('getSelected');
+                if (row != null) {
+                    var index = $('#jobTypeDatagrid').edatagrid('getRowIndex', row);
+                    $('#jobTypeDatagrid').edatagrid('editRow', index);
+                }
+            });
+            //Cancel
+            $('#jobType_tb_cancel').bind('click', function () {
+                var row = $('#jobTypeDatagrid').edatagrid('getSelected');
+                if (row != null) {
+                    var index = $('#jobTypeDatagrid').edatagrid('getRowIndex', row);
+                    $('#jobTypeDatagrid').edatagrid('destroyRow', index);
+                }
+            });
+            $('#jobTypeDatagrid').edatagrid({
+                idField: 'jobId',
+                autoSave: true,
+                url: '/JobTypeControl/find',
+                saveUrl: '/JobTypeControl/save',
+                updateUrl: '/JobTypeControl/update',
+                destroyUrl: '/JobTypeControl/delete',
+                sortName: 'jobCode',
+                sortOrder: 'asc',
+                toolbar: 'jobType_tb',
+                onSelect: function (index, row) {
+                    $('#performanceDatagrid').edatagrid('load', {jobCode: row.jobCode});
+                },
+                onError: function (index, row) {
+                    if (row.textStatus == 'error') {
+                        $.messager.show({
+                            title: 'Error',
+                            msg: row.jqXHR.responseText,
+                            showType: 'show'
+                        });
+                    }
+                },
+                columns: [[
+                    {
+                        field: 'jobId',
+                        title: 'jobId',
+                        align: 'center',
+                        hidden: true
+                    },
+                    {
+                        field: 'jobCode',
+                        title: '岗位代码',
+                        align: 'center',
+                        editor: {type: 'validatebox', options: {required: true}}
+                    },
+                    {
+                        field: 'jobName',
+                        title: '岗位名称',
+                        align: 'center',
+                        editor: {type: 'validatebox', options: {required: true}}
+                    },
+                    {
+                        field: 'jobBasepay',
+                        title: '基本工资',
+                        align: 'center',
+                        editor: {type: 'validatebox'}
+                    }
+                    ,
+                    {
+                        field: 'jobPay',
+                        title: '岗位工资',
+                        align: 'center',
+                        editor: {type: 'validatebox'}
+                    }
+                    ,
+                    {
+                        field: 'jobTraffic',
+                        title: '交通补助',
+                        align: 'center',
+                        editor: {type: 'validatebox'}
+                    }
+                    ,
+                    {
+                        field: 'jobFood',
+                        title: '餐食补助',
+                        align: 'center',
+                        editor: {type: 'validatebox'}
+                    }
+                    ,
+                    {
+                        field: 'jobOther',
+                        title: '其他补助',
+                        align: 'center',
+                        editor: {type: 'validatebox'}
+                    }
+                    ,
+                    {
+                        field: 'jobTotal',
+                        title: '合计',
+                        align: 'center',
+                        formatter: function (value, row, index) {
+                            return row.jobBasepay + row.jobPay + row.jobTraffic + row.jobFood + row.jobOther;
+                        }
+                    }
+                    ,
+                    {
+                        field: 'jobOverpay',
+                        title: '加班费(元/小时)',
+                        align: 'center',
+                        editor: {type: 'validatebox'}
+                    }
+                    ,
+                    {
+                        field: 'creator',
+                        title: '创建人',
+                        align: 'center',
+                        width: 80
+                    }
+                    ,
+                    {
+                        field: 'createdTim',
+                        title: '创建时间',
+                        align: 'center',
+                        width: 170
+                    }
+                    ,
+                    {
+                        field: 'changer',
+                        title: '修改人',
+                        align: 'center',
+                        width: 80
+                    }
+                    ,
+                    {
+                        field: 'changedTim',
+                        title: '修改时间',
+                        align: 'center',
+                        width: 170
+                    }
+                ]],
+                rownumbers: true,
+                pageSize: 20,
+                pagination: true
+            });
+            //保存
+            $('#performance_tb_save').bind('click', function () {
+                var getSelected = $('#jobTypeDatagrid').datagrid('getSelected');
+                if (getSelected == null) {
+                    $.messager.alert('Warning', '请先选择岗位');
+                    return false;
+                }
+                var getChecked = $('#performanceDatagrid').datagrid('getChecked');
+                // $.each(getChecked, function (index, item) {
+                //     $.each(item.performances, function (index1, item1) {
+                //         delete item1.children;
+                //     });
+                // });
+                getSelected.performances = getChecked;
+                $.ajax({
+                    url: '/JobPerfControl/save',
+                    contentType: "application/json",
+                    type: "POST",
+                    data: JSON.stringify(getSelected),
+                    success: function (data) {
+                        $.messager.show({
+                            title: 'Ok',
+                            msg: '操作成功',
+                            showType: 'show'
+                        });
+                    }
+                })
+            });
+            $('#performanceDatagrid').edatagrid({
+                url: '/JobPerfControl/find',
+                sortName: 'perfCode',
+                sortOrder: 'asc',
+                singleSelect: true,
+                toolbar: '#performance_tb',
+                onLoadSuccess: function (data) {
+                    if (data) {
+                        $.each(data.rows, function (index, item) {
+                                if (item.ck) {
+                                    $('#performanceDatagrid').edatagrid('checkRow', index);
+                                }
+                            }
+                        );
+                    }
+                },
+                onError: function (index, row) {
+                    if (row.textStatus == 'error') {
+                        $.messager.show({
+                            title: 'Error',
+                            msg: row.jqXHR.responseText,
+                            showType: 'show'
+                        });
+                    }
+                },
+                columns: [[
+                    {
+                        field: 'ck',
+                        checkbox: true,
+                        rowspan: 2,
+                    },
+                    {
+                        field: 'perfId',
+                        title: 'perfId',
+                        align: 'center',
+                        hidden: true,
+                        rowspan: 2,
+                    }
+                    ,
+                    {
+                        field: 'perfCode',
+                        title: 'perfCode',
+                        align: 'center',
+                        editor: {type: 'validatebox', options: {required: true}},
+                        rowspan: 2,
+                    },
+                    {
+                        field: 'perfName',
+                        title: 'perfName',
+                        align: 'center',
+                        editor: {type: 'validatebox', options: {required: true}},
+                        rowspan: 2,
+                    },
+                    {title: '完成率≤50%', colspan: 2},
+                    {title: '50%≤完成率≤80%', colspan: 2},
+                    {title: '80%≤完成率≤100%', colspan: 2},
+                    {title: '100%≤完成率', colspan: 2},
+                    {
+                        field: 'creator',
+                        title: '创建人',
+                        align: 'center',
+                        width: 80,
+                        rowspan: 2,
+                    }
+                    ,
+                    {
+                        field: 'createdTim',
+                        title: '创建时间',
+                        align: 'center',
+                        width: 170,
+                        rowspan: 2,
+                    }
+                    ,
+                    {
+                        field: 'changer',
+                        title: '修改人',
+                        align: 'center',
+                        width: 80,
+                        rowspan: 2,
+                    }
+                    ,
+                    {
+                        field: 'changedTim',
+                        title: '修改时间',
+                        align: 'center',
+                        width: 170,
+                        rowspan: 2,
+                    }
+                ], [
+                    {
+                        field: 'per05',
+                        title: '个人销售额的提成',
+                        align: 'center',
+                        editor: {type: 'validatebox'}
+                    }
+                    ,
+                    {
+                        field: 'job05',
+                        title: '岗位工资考核方式',
+                        align: 'center',
+                        editor: {type: 'validatebox'}
+                    }
+                    ,
+                    {
+                        field: 'per58',
+                        title: '个人销售额的提成',
+                        align: 'center',
+                        editor: {type: 'validatebox'}
+                    }
+                    ,
+                    {
+                        field: 'job58',
+                        title: '岗位工资考核方式',
+                        align: 'center',
+                        editor: {type: 'validatebox'}
+                    }
+                    ,
+                    {
+                        field: 'per810',
+                        title: '个人销售额的提成',
+                        align: 'center',
+                        editor: {type: 'validatebox'}
+                    }
+                    ,
+                    {
+                        field: 'job810',
+                        title: '岗位工资考核方式',
+                        align: 'center',
+                        editor: {type: 'validatebox'}
+                    }
+                    ,
+                    {
+                        field: 'per10',
+                        title: '个人销售额的提成',
+                        align: 'center',
+                        editor: {type: 'validatebox'}
+                    }
+                    ,
+                    {
+                        field: 'job10',
+                        title: '岗位工资考核方式',
+                        align: 'center',
+                        editor: {type: 'validatebox'}
+                    }
+                ]],
+                rownumbers: true,
+                pageSize: 20,
+                pagination: true
+            });
+        });
+    </script>
+</head>
+<body class="easyui-layout" style="width: 100%;height: 100%">
+<div data-options="region:'west',title:'用户',split:true" style="width:60%;">
+    <div id="jobType_tb">
+        <shiro:hasPermission name="jobType:save"><a id="jobType_tb_add" href="#" class="easyui-linkbutton"
+                                                    iconCls="icon-add"
+                                                    plain="true">Add</a></shiro:hasPermission>
+        <shiro:hasPermission name="jobType:save"><a id="jobType_tb_edit" href="#" class="easyui-linkbutton"
+                                                    iconCls="icon-edit"
+                                                    plain="true">Edit</a></shiro:hasPermission>
+        <shiro:hasPermission name="jobType:save"><a id="jobType_tb_cancel" href="#" class="easyui-linkbutton"
+                                                    iconCls="icon-cancel"
+                                                    plain="true">Cancel</a></shiro:hasPermission>
+    </div>
+    <table id="jobTypeDatagrid"></table>
+</div>
+<div data-options="region:'center',title:'绩效授权'" style="width:40%;">
+    <div id="performance_tb">
+        <shiro:hasPermission name="empJob:save"><a id="performance_tb_save" href="#" class="easyui-linkbutton"
+                                                   iconCls="icon-save"
+                                                   plain="true">Save</a></shiro:hasPermission>
+    </div>
+    <table id="performanceDatagrid"></table>
+</div>
+</body>
+</html>

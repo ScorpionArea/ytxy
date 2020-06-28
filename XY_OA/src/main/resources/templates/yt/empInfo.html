@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head>
+    <meta charset="UTF-8">
+    <title>员工信息</title>
+    <link rel="stylesheet" type="text/css" href="../js/jquery-easyui-1.8.5/themes/default/easyui.css">
+    <link rel="stylesheet" type="text/css" href="../js/jquery-easyui-1.8.5/themes/icon.css">
+    <link rel="stylesheet" type="text/css" href="../js/jquery-easyui-1.8.5/demo/demo.css">
+    <script type="text/javascript" src="../js/jquery-easyui-1.8.5/jquery.min.js"></script>
+    <script type="text/javascript" src="../js/jquery-easyui-1.8.5/jquery.easyui.min.js"></script>
+    <script type="text/javascript" src="../js/easyui-ext/jquery.edatagrid.js"></script>
+    <script type="text/javascript" src="../js/jquery-easyui-1.8.5/locale/easyui-lang-zh_CN.js"></script>
+    <script type="text/javascript" th:inline="none">
+        $(function () {
+            //Add
+            $('#empInfo_tb_add').bind('click', function () {
+                $('#empInfoDatagrid').edatagrid('addRow');
+            });
+            //Edit
+            $('#empInfo_tb_edit').bind('click', function () {
+                var row = $('#empInfoDatagrid').edatagrid('getSelected');
+                if (row != null) {
+                    var index = $('#empInfoDatagrid').edatagrid('getRowIndex', row);
+                    $('#empInfoDatagrid').edatagrid('editRow', index);
+                }
+            });
+            //Cancel
+            $('#empInfo_tb_cancel').bind('click', function () {
+                var row = $('#empInfoDatagrid').edatagrid('getSelected');
+                if (row != null) {
+                    var index = $('#empInfoDatagrid').edatagrid('getRowIndex', row);
+                    $('#empInfoDatagrid').edatagrid('destroyRow', index);
+                }
+            });
+            $('#empInfoDatagrid').edatagrid({
+                idField: 'empId',
+                autoSave: true,
+                url: '/EmpInfoControl/find',
+                saveUrl: '/EmpInfoControl/save',
+                updateUrl: '/EmpInfoControl/update',
+                destroyUrl: '/EmpInfoControl/delete',
+                sortName: 'empCode',
+                sortOrder: 'asc',
+                toolbar: '#empInfo_tb',
+                onSelect: function (index, row) {
+                    $('#jobTypeDatagrid').edatagrid('load', {empCode: row.empCode});
+                },
+                onError: function (index, row) {
+                    if (row.textStatus == 'error') {
+                        $.messager.show({
+                            title: 'Error',
+                            msg: row.jqXHR.responseText,
+                            showType: 'show'
+                        });
+                    }
+                },
+                columns: [[
+                    {
+                        field: 'empId',
+                        title: 'empId',
+                        align: 'center',
+                        hidden: true,
+                    },
+                    {
+                        field: 'empCode',
+                        title: '员工编号',
+                        align: 'center',
+                        editor: {type: 'validatebox', options: {required: true}}
+                    },
+                    {
+                        field: 'empName',
+                        title: '员工名称',
+                        align: 'center',
+                        editor: {type: 'validatebox', options: {required: true}}
+                    },
+                    {
+                        field: 'empCard',
+                        title: '身份证号码',
+                        align: 'center',
+                        editor: {type: 'validatebox'}
+                    }
+                    ,
+                    {
+                        field: 'empBank',
+                        title: '银行卡号',
+                        align: 'center',
+                        editor: {type: 'validatebox'}
+                    }
+                    ,
+                    {
+                        field: 'bankLoc',
+                        title: '开户行',
+                        align: 'center',
+                        editor: {type: 'validatebox'}
+                    }
+                    ,
+                    {
+                        field: 'empCall',
+                        title: '联系电话',
+                        align: 'center',
+                        editor: {type: 'validatebox'}
+                    }
+                    ,
+                    {
+                        field: 'empAddr',
+                        title: '联系地址',
+                        align: 'center',
+                        editor: {type: 'validatebox'}
+                    }
+                    ,
+                    {
+                        field: 'empHiredate',
+                        title: '入职时间',
+                        align: 'center',
+                        editor: {type: 'datebox', options: {required: true}}
+                    }
+                    ,
+                    {
+                        field: 'state',
+                        title: '状态',
+                        align: 'center',
+                        editor: {type: 'validatebox', options: {required: true}}
+                    }
+                    ,
+                    {
+                        field: 'empRemark',
+                        title: '备注',
+                        align: 'center',
+                        editor: {type: 'validatebox'}
+                    }
+                    ,
+                    {
+                        field: 'creator',
+                        title: '创建人',
+                        align: 'center',
+                        width: 80
+                    }
+                    ,
+                    {
+                        field: 'createdTim',
+                        title: '创建时间',
+                        align: 'center',
+                        width: 170
+                    }
+                    ,
+                    {
+                        field: 'changer',
+                        title: '修改人',
+                        align: 'center',
+                        width: 80
+                    }
+                    ,
+                    {
+                        field: 'changedTim',
+                        title: '修改时间',
+                        align: 'center',
+                        width: 170
+                    }
+                ]],
+                rownumbers: true,
+                pageSize: 20,
+                pagination: true
+            });
+            //保存
+            $('#jobType_tb_save').bind('click', function () {
+                var getSelected = $('#empInfoDatagrid').datagrid('getSelected');
+                if (getSelected == null) {
+                    $.messager.alert('Warning', '请先选择员工');
+                    return false;
+                }
+                var getChecked = $('#jobTypeDatagrid').datagrid('getChecked');
+                $.each(getChecked, function (index, item) {
+                    $.each(item.performances, function (index1, item1) {
+                        delete item1.children;
+                    });
+                });
+                getSelected.jobTypes = getChecked;
+                $.ajax({
+                    url: '/EmpJobControl/save',
+                    contentType: "application/json",
+                    type: "POST",
+                    data: JSON.stringify(getSelected),
+                    success: function (data) {
+                        $.messager.show({
+                            title: 'Ok',
+                            msg: '操作成功',
+                            showType: 'show'
+                        });
+                    }
+                })
+            });
+            $('#jobTypeDatagrid').edatagrid({
+                url: '/EmpJobControl/find',
+                sortName: 'jobCode',
+                sortOrder: 'asc',
+                singleSelect: true,
+                toolbar: '#jobType_tb',
+                onLoadSuccess: function (data) {
+                    if (data) {
+                        $.each(data.rows, function (index, item) {
+                                if (item.ck) {
+                                    $('#jobTypeDatagrid').edatagrid('checkRow', index);
+                                }
+                            }
+                        );
+                    }
+                },
+                onError: function (index, row) {
+                    if (row.textStatus == 'error') {
+                        $.messager.show({
+                            title: 'Error',
+                            msg: row.jqXHR.responseText,
+                            showType: 'show'
+                        });
+                    }
+                },
+                columns: [[
+                    {
+                        field: 'ck',
+                        checkbox: true,
+                    },
+                    {
+                        field: 'jobId',
+                        title: 'jobId',
+                        align: 'center',
+                        hidden: true
+                    },
+                    {
+                        field: 'jobCode',
+                        title: '岗位代码',
+                        align: 'center',
+                        editor: {type: 'validatebox', options: {required: true}}
+                    },
+                    {
+                        field: 'jobName',
+                        title: '岗位名称',
+                        align: 'center',
+                        editor: {type: 'validatebox', options: {required: true}}
+                    },
+                    {
+                        field: 'jobBasepay',
+                        title: '基本工资',
+                        align: 'center',
+                        editor: {type: 'validatebox'}
+                    }
+                    ,
+                    {
+                        field: 'jobPay',
+                        title: '岗位工资',
+                        align: 'center',
+                        editor: {type: 'validatebox'}
+                    }
+                    ,
+                    {
+                        field: 'jobTraffic',
+                        title: '交通补助',
+                        align: 'center',
+                        editor: {type: 'validatebox'}
+                    }
+                    ,
+                    {
+                        field: 'jobFood',
+                        title: '餐食补助',
+                        align: 'center',
+                        editor: {type: 'validatebox'}
+                    }
+                    ,
+                    {
+                        field: 'jobOther',
+                        title: '其他补助',
+                        align: 'center',
+                        editor: {type: 'validatebox'}
+                    }
+                    ,
+                    {
+                        field: 'jobTotal',
+                        title: '合计',
+                        align: 'center',
+                        formatter: function (value, row, index) {
+                            return row.jobBasepay + row.jobPay + row.jobTraffic + row.jobFood + row.jobOther;
+                        }
+                    }
+                    ,
+                    {
+                        field: 'jobOverpay',
+                        title: '加班费(元/小时)',
+                        align: 'center',
+                        editor: {type: 'validatebox'}
+                    }
+                    ,
+                    {
+                        field: 'creator',
+                        title: '创建人',
+                        align: 'center',
+                        width: 80
+                    }
+                    ,
+                    {
+                        field: 'createdTim',
+                        title: '创建时间',
+                        align: 'center',
+                        width: 170
+                    }
+                    ,
+                    {
+                        field: 'changer',
+                        title: '修改人',
+                        align: 'center',
+                        width: 80
+                    }
+                    ,
+                    {
+                        field: 'changedTim',
+                        title: '修改时间',
+                        align: 'center',
+                        width: 170
+                    }
+                ]],
+                rownumbers: true,
+                pageSize: 20,
+                pagination:
+                    true
+            });
+        });
+    </script>
+</head>
+<body class="easyui-layout" style="width: 100%;height: 100%">
+<div data-options="region:'west',title:'用户',split:true" style="width:60%;">
+    <div id="empInfo_tb">
+        <shiro:hasPermission name="empInfo:save"><a id="empInfo_tb_add" href="#" class="easyui-linkbutton"
+                                                    iconCls="icon-add"
+                                                    plain="true">Add</a></shiro:hasPermission>
+        <shiro:hasPermission name="empInfo:update"><a id="empInfo_tb_edit" href="#" class="easyui-linkbutton"
+                                                      iconCls="icon-edit"
+                                                      plain="true">Edit</a></shiro:hasPermission>
+        <shiro:hasPermission name="empInfo:delete"><a id="empInfo_tb_cancel" href="#" class="easyui-linkbutton"
+                                                      iconCls="icon-cancel"
+                                                      plain="true">Cancel</a></shiro:hasPermission>
+    </div>
+    <table id="empInfoDatagrid"></table>
+</div>
+<div data-options="region:'center',title:'岗位授权'" style="width:40%;">
+    <div id="jobType_tb">
+        <shiro:hasPermission name="empJob:save"><a id="jobType_tb_save" href="#" class="easyui-linkbutton"
+                                                   iconCls="icon-save"
+                                                   plain="true">Save</a></shiro:hasPermission>
+    </div>
+    <table id="jobTypeDatagrid"></table>
+</div>
+</body>
+</html>

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <meta http-equiv="Pragma" content="no-cache">
+        <meta http-equiv="Cache-Control" content="no-cache">
+        <meta http-equiv="Expires" content="0">
+        <title>Login</title>
+        <link rel="stylesheet" type="text/css" href="js/jquery-easyui-1.8.5/themes/default/easyui.css">
+        <link rel="stylesheet" type="text/css" href="js/jquery-easyui-1.8.5/themes/icon.css">
+        <link rel="stylesheet" type="text/css" href="js/jquery-easyui-1.8.5/demo/demo.css">
+        <link href="css/login/login.css" rel="stylesheet" type="text/css">
+        <script type="text/javascript" src="js/jquery-easyui-1.8.5/jquery.min.js"></script>
+        <script type="text/javascript" src="js/jquery-easyui-1.8.5/jquery.easyui.min.js"></script>
+        <script type="application/javascript">
+            $(function () {
+                if (window.parent != window) {//iframe中session超时,跳转打开窗口还是嵌入在iframe中问题解决
+                    window.parent.location.reload(true);
+                }
+            });
+        </script>
+    </head>
+<body>
+<div class="login_box">
+    <div class="login_l_img"><img src="img/login/logo-xy.png"></div>
+    <div class="login">
+        <div class="login_logo"><img
+                src="img/login/login_logo.png"></a></div>
+        <div class="login_name">
+            <p>香影薪资系统</p>
+        </div>
+        <form action="/login" method="post">
+            <input name="username" type="text" value="用户名" onfocus="this.value=&#39;&#39;"
+                   onblur="if(this.value==&#39;&#39;){this.value=&#39;用户名&#39;}">
+            <span id="password_text"
+                  onclick="this.style.display=&#39;none&#39;;document.getElementById(&#39;password&#39;).style.display=&#39;block&#39;;document.getElementById(&#39;password&#39;).focus().select();">密码</span>
+            <input name="password" type="password" id="password" style="display:none;"
+                   onblur="if(this.value==&#39;&#39;){document.getElementById(&#39;password_text&#39;).style.display=&#39;block&#39;;this.style.display=&#39;none&#39;};">
+            <input type="checkbox" name="rememberMe" style="width:50px"/>记住我
+            <h1 th:if="${msg != null }" th:text="${msg}" style="color: red"></h1>
+            <input value="登录" style="width:100%;" type="submit">
+        </form>
+    </div>
+    <div class="copyright">@Chen's</div>
+</div>
+</body>
+</html>

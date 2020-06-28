@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="../js/jquery-easyui-1.8.5/themes/default/easyui.css">
+    <link rel="stylesheet" type="text/css" href="../js/jquery-easyui-1.8.5/themes/icon.css">
+    <link rel="stylesheet" type="text/css" href="../js/jquery-easyui-1.8.5/demo/demo.css">
+    <script type="text/javascript" src="../js/jquery-easyui-1.8.5/jquery.min.js"></script>
+    <script type="text/javascript" src="../js/jquery-easyui-1.8.5/jquery.easyui.min.js"></script>
+    <script type="text/javascript" src="../js/easyui-ext/jquery.edatagrid.js"></script>
+    <script type="text/javascript" src="../js/jquery-easyui-1.8.5/locale/easyui-lang-zh_CN.js"></script>
+    <script type="text/javascript" th:inline="none">
+        $(function () {
+            $.post("/SysPermissionControl/findMenu",
+                function (data, status) {
+                    $('#sysPermissionMenu').tree({
+                        onlyLeafCheck: true,
+                        data: data,
+                        onClick: function (node) {
+                            $('#sysPermissionDatagrid').datagrid({
+                                url: '/SysPermissionControl/findByParentIdOrderBySortedAsc',
+                                queryParams: {parentId: node.id}
+                            });
+                        }
+                    });
+                });
+            //Add
+            $('#btn-add').bind('click', function () {
+                var node = $('#sysPermissionMenu').tree('getSelected');
+                if (node) {
+                    $('#sysPermissionDatagrid').edatagrid('addRow', {row: {parentId: node.id}});
+                } else {
+                    $.messager.confirm('Confirm', '添加根节点？', function (r) {
+                        if (r) {
+                            $('#sysPermissionDatagrid').edatagrid('addRow', {row: {parentId: 0}});
+                        } else {
+                            return;
+                        }
+                    });
+                }
+            });
+            //Edit
+            $('#btn-edit').bind('click', function () {
+                var row = $('#sysPermissionDatagrid').edatagrid('getSelected');
+                if (row != null) {
+                    var index = $('#sysPermissionDatagrid').edatagrid('getRowIndex', row);
+                    $('#sysPermissionDatagrid').edatagrid('editRow', index);
+                }
+            });
+            //Cancel
+            $('#btn-cancel').bind('click', function () {
+                var row = $('#sysPermissionDatagrid').edatagrid('getSelected');
+                if (row != null) {
+                    var index = $('#sysPermissionDatagrid').edatagrid('getRowIndex', row);
+                    $('#sysPermissionDatagrid').edatagrid('destroyRow', index);
+                }
+            });
+            $('#sysPermissionDatagrid').edatagrid({
+                autoSave: true,
+                url: '',
+                saveUrl: '/SysPermissionControl/save',
+                updateUrl: '/SysPermissionControl/update',
+                destroyUrl: '/SysPermissionControl/delete',
+                toolbar: [{
+                    text: 'Add',
+                    iconCls: 'icon-add',
+                    handler: function () {
+                        var node = $('#sysPermissionMenu').tree('getSelected');
+                        if (node) {
+                            $('#sysPermissionDatagrid').edatagrid('addRow', {row: {parentId: node.id}});
+                        } else {
+                            $.messager.confirm('Confirm', '添加根节点？', function (r) {
+                                if (r) {
+                                    $('#sysPermissionDatagrid').edatagrid('addRow', {row: {parentId: 0}});
+                                } else {
+                                    return;
+                                }
+                            });
+                        }
+                    }
+                }, '-', {
+                    text: 'Edit',
+                    iconCls: 'icon-edit',
+                    handler: function () {
+                        var row = $('#sysPermissionDatagrid').edatagrid('getSelected');
+                        if (row != null) {
+                            var index = $('#sysPermissionDatagrid').edatagrid('getRowIndex', row);
+                            $('#sysPermissionDatagrid').edatagrid('editRow', index);
+                        }
+                    }
+                }, '-', {
+                    text: 'Cancel',
+                    iconCls: 'icon-cancel',
+                    handler: function () {
+                        var row = $('#sysPermissionDatagrid').edatagrid('getSelected');
+                        if (row != null) {
+                            var index = $('#sysPermissionDatagrid').edatagrid('getRowIndex', row);
+                            $('#sysPermissionDatagrid').edatagrid('destroyRow', index);
+                        }
+                    }
+                }],
+                onError: function (index, row) {
+                    if (row.textStatus == 'error') {
+                        $.messager.show({
+                            title: 'Error',
+                            msg: row.jqXHR.responseText,
+                            showType: 'show'
+                        });
+                    }
+                },
+                columns: [[
+                    {
+                        field: 'id',
+                        title: 'id',
+                        hidden: true
+                    },
+                    {
+                        field: 'parentId',
+                        title: 'parentId',
+                        hidden: true
+                    },
+                    {
+                        field: 'code',
+                        title: 'code',
+                        editor: {type: 'validatebox', options: {required: true}}
+                    },
+                    {
+                        field: 'text',
+                        title: 'text',
+                        editor: {type: 'validatebox', options: {required: true}}
+                    },
+                    {
+                        field: 'permissionType',
+                        title: 'permissionType',
+                        editor: {type: 'validatebox', options: {required: true}}
+                    },
+                    {
+                        field: 'permissionState',
+                        title: 'permissionState',
+                        editor: {type: 'validatebox', options: {required: true}}
+                    },
+                    {
+                        field: 'description',
+                        title: 'description',
+                        editor: {type: 'validatebox'}
+                    },
+                    {
+                        field: 'state',
+                        title: 'state',
+                        editor: {type: 'validatebox', options: {required: true}}
+                    },
+                    {
+                        field: 'iconCls',
+                        title: 'iconCls',
+                        editor: {type: 'validatebox'}
+                    },
+                    {
+                        field: 'href',
+                        title: 'href',
+                        editor: {type: 'validatebox'}
+                    },
+                    {
+                        field: 'sorted',
+                        title: 'sorted',
+                        editor: {
+                            type: 'numberbox', options: {required: true}
+                        }
+                    },
+                    {
+                        field: 'creator',
+                        title:
+                            '创建人',
+                        align:
+                            'center',
+                        width:
+                            80
+                    }
+                    ,
+                    {
+                        field: 'createdTim',
+                        title:
+                            '创建时间',
+                        align:
+                            'center',
+                        width:
+                            170
+                    }
+                    ,
+                    {
+                        field: 'changer',
+                        title:
+                            '修改人',
+                        align:
+                            'center',
+                        width:
+                            80
+                    }
+                    ,
+                    {
+                        field: 'changedTim',
+                        title:
+                            '修改时间',
+                        align:
+                            'center',
+                        width:
+                            170
+                    }
+                ]],
+                rownumbers: true,
+                pageSize: 20,
+                pagination: true
+            });
+        });
+    </script>
+</head>
+<body class="easyui-layout">
+<div data-options="region:'west',split:true" title="菜单" style="width:16%">
+    <div id="sysPermissionMenu" style="width:100%"></div>
+</div>
+<div data-options="region:'center'">
+    <div id="sysPermissionDatagrid_tb">
+        <shiro:hasPermission name="sysPermission:save"><a id="btn-add" href="#" class="easyui-linkbutton" iconCls="icon-add"
+                                                    plain="true">Add</a></shiro:hasPermission>
+        <shiro:hasPermission name="sysPermission:update"><a id="btn-edit" href="#" class="easyui-linkbutton"
+                                                      iconCls="icon-edit"
+                                                      plain="true">Edit</a></shiro:hasPermission>
+        <shiro:hasPermission name="sysPermission:delete"><a id="btn-cancel" href="#" class="easyui-linkbutton"
+                                                      iconCls="icon-cancel"
+                                                      plain="true">Cancel</a></shiro:hasPermission>
+    </div>
+    <table id="sysPermissionDatagrid"></table>
+</div>
+</body>
+</html>

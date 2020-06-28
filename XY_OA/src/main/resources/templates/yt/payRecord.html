@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head>
+    <meta charset="UTF-8">
+    <title>员工信息</title>
+    <link rel="stylesheet" type="text/css" href="../js/jquery-easyui-1.8.5/themes/default/easyui.css">
+    <link rel="stylesheet" type="text/css" href="../js/jquery-easyui-1.8.5/themes/icon.css">
+    <link rel="stylesheet" type="text/css" href="../js/jquery-easyui-1.8.5/demo/demo.css">
+    <script type="text/javascript" src="../js/jquery-easyui-1.8.5/jquery.min.js"></script>
+    <script type="text/javascript" src="../js/jquery-easyui-1.8.5/jquery.easyui.min.js"></script>
+    <script type="text/javascript" src="../js/easyui-ext/jquery.edatagrid.js"></script>
+    <script type="text/javascript" src="../js/jquery-easyui-1.8.5/locale/easyui-lang-zh_CN.js"></script>
+    <script type="text/javascript" src="../js/jquery-migrate-1.4.1.js"></script>
+    <script type="text/javascript" src="../js/jquery.jqprint-0.3.js"></script>
+    <script type="text/javascript" th:inline="none">
+        $(function () {
+            //姓名
+            $('#empCode').combogrid({
+                panelWidth: 540,
+                method: 'post',
+                mode: 'remote',
+                url: '../EmpInfoControl/comboGrid',
+                idField: 'empCode',
+                textField: 'empName',
+                columns: [[
+                    {field: 'empCode', title: 'empCode',},
+                    {field: 'empName', title: 'empName',}
+                ]],
+                rownumbers: true,
+                pageSize: 20,
+                pagination: true
+            });
+            //月份
+            $('#payDate').datebox({
+                onShowPanel: function () {//显示日趋选择对象后再触发弹出月份层的事件，初始化时没有生成月份层
+                    span.trigger('click'); //触发click事件弹出月份层
+                    if (!tds) setTimeout(function () {//延时触发获取月份对象，因为上面的事件触发和对象生成有时间间隔
+                        tds = p.find('div.calendar-menu-month-inner td');
+                        tds.click(function (e) {
+                            e.stopPropagation(); //禁止冒泡执行easyui给月份绑定的事件
+                            var year = $(".calendar-menu-year").val();
+                            var month = parseInt($(this).attr('abbr'), 10);
+                            $('#payDate').datebox('hidePanel')//隐藏日期对象
+                                .datebox('setValue', year + '-' + month); //设置日期的值
+                        });
+                    }, 0)
+                },
+                parser: function (s) {//配置parser，返回选择的日期
+                    if (!s) return new Date();
+                    var ss = (s.split('-'));
+                    var y = parseInt(ss[0], 10);
+                    var m = parseInt(ss[1], 10);
+                    if (!isNaN(y) && !isNaN(m)) {
+                        return new Date(y, m - 1);
+                    } else {
+                        return new Date();
+                    }
+                },
+                formatter: function (d) {
+                    debugger;
+                    var y = d.getFullYear();
+                    var m = d.getMonth() + 1;
+                    var d = d.getDate();
+                    return y + '-' + (m < 10 ? ('0' + m) : m);
+                }//配置formatter，只返回年月
+            });
+            var p = $('#payDate').datebox('panel'), //日期选择对象
+                tds = false, //日期选择对象中月份
+                span = p.find('span.calendar-text'); //显示月份层的触发控件
+            //Search
+            $('#payRecord_tb_search').bind('click', function () {
+                debugger
+                var payDate = $('#payDate').datebox('getValue');
+                var empCode = $('#empCode').combogrid('getValue');
+                $('#payRecordDatagrid').edatagrid('load', {payDate: payDate, empCode: empCode});
+            });
+            //Add
+            $('#payRecord_tb_add').bind('click', function () {
+                $('#payRecordDatagrid').edatagrid('addRow');
+            });
+            //Edit
+            $('#payRecord_tb_edit').bind('click', function () {
+                var row = $('#payRecordDatagrid').edatagrid('getSelected');
+                if (row != null) {
+                    var index = $('#payRecordDatagrid').edatagrid('getRowIndex', row);
+                    $('#payRecordDatagrid').edatagrid('editRow', index);
+                }
+            });
+            //Cancel
+            $('#payRecord_tb_cancel').bind('click', function () {
+                var row = $('#payRecordDatagrid').edatagrid('getSelected');
+                if (row != null) {
+                    var index = $('#payRecordDatagrid').edatagrid('getRowIndex', row);
+                    $('#payRecordDatagrid').edatagrid('destroyRow', index);
+                }
+            });
+            //print
+            $('#payRecord_tb_print').bind('click', function () {
+                var getRows = $('#payRecordDatagrid').edatagrid("getRows");
+                for (var i = 0; i < getRows.length; i++) {
+                    var table = $("<table width=\"100%\" border=\"1\" cellspacing=\"0\" style=\"margin-bottom:10px;\">");
+                    table.append("<tr><td width=\"72\">薪资日期</td><td width=\"72\">员工名称</td><td width=\"72\">员工岗位</td><td width=\"72\">基本工资</td><td width=\"72\">岗位工资</td><td width=\"72\">交通补助</td><td width=\"72\">餐食补助</td><td width=\"72\">其他补助</td><td width=\"72\">计划销售额</td><td width=\"72\">实际销售额</td><td width=\"72\">完成比例</td><td width=\"72\">绩效提成</td><td width=\"72\">奖惩</td><td width=\"72\">合计</td></tr>");
+                    table.append("<tr><td width=\"72\">" + getRows[i].payDate.substr(0, 7) + "</td><td width=\"72\">" + getRows[i].empName + "</td><td width=\"72\">" + getRows[i].jobName + "</td><td width=\"72\">" + getRows[i].jobBasepay + "</td><td width=\"72\">" + getRows[i].jobPay + "</td><td width=\"72\">" + getRows[i].jobTraffic + "</td><td width=\"72\">" + getRows[i].jobFood + "</td><td width=\"72\">" + getRows[i].jobOther + "</td><td width=\"72\">" + getRows[i].planPref + "</td><td width=\"72\">" + getRows[i].realPref + "</td><td width=\"72\">" + getRows[i].rate * 100 + "%" + "</td><td width=\"72\">" + getRows[i].perfCount + "</td><td width=\"72\">" + getRows[i].rpCount + "</td><td width=\"72\">" + getRows[i].allCount + "</td></tr>")
+                    table.append("</table>");
+                    table.appendTo($("#payRecordWindow"));
+                }
+                $('#payRecordWindow').window('open');
+            });
+            $('#payRecordWindow_t_ok').bind('click', function () {
+                $('#payRecordWindow').jqprint();
+            })
+
+            $('#payRecordDatagrid').edatagrid({
+                idField: 'payId',
+                autoSave: true,
+                url: '/PayRecordControl/find',
+                saveUrl: '/PayRecordControl/save',
+                updateUrl: '/PayRecordControl/update',
+                destroyUrl: '/PayRecordControl/delete',
+                sortName: 'payDate',
+                sortOrder: 'asc',
+                toolbar: '#payRecord_tb',
+                onError: function (index, row) {
+                    if (row.textStatus == 'error') {
+                        $.messager.show({
+                            title: 'Error',
+                            msg: row.jqXHR.responseText,
+                            showType: 'show'
+                        });
+                    }
+                },
+                columns: [[
+                    {
+                        field: 'payId',
+                        title: 'payId',
+                        align: 'center',
+                        hidden: true
+                    },
+                    {
+                        field: 'payDate',
+                        title: '薪资日期',
+                        align: 'center',
+                        formatter: function (value, row, index) {
+                            return value.substr(0, 7);
+                        }
+                    },
+                    {
+                        field: 'empCode',
+                        title: '员工代码',
+                        align: 'center',
+                        hidden: true,
+                    },
+                    {
+                        field: 'empName',
+                        title: '员工名称',
+                        align: 'center',
+                    },
+                    {
+                        field: 'jobCode',
+                        title: '岗位代码',
+                        align: 'center',
+                        hidden: true,
+                    },
+                    {
+                        field: 'jobName',
+                        title: '岗位名称',
+                        align: 'center'
+                    },
+                    {
+                        field: 'jobBasepay',
+                        title: '基本工资',
+                        align: 'center',
+                    }
+                    ,
+                    {
+                        field: 'jobPay',
+                        title: '岗位工资',
+                        align: 'center',
+                    }
+                    ,
+                    {
+                        field: 'jobTraffic',
+                        title: '交通补助',
+                        align: 'center',
+                    }
+                    ,
+                    {
+                        field: 'jobFood',
+                        title: '餐食补助',
+                        align: 'center',
+                    }
+                    ,
+                    {
+                        field: 'jobOther',
+                        title: '其他补助',
+                        align: 'center',
+                    }
+                    ,
+                    {
+                        field: 'planPref',
+                        title: '计划销售额',
+                        align: 'center',
+                    }
+                    ,
+                    {
+                        field: 'realPref',
+                        title: '实际销售额',
+                        align: 'center',
+                    }
+                    ,
+                    {
+                        field: 'rate',
+                        title: '完成比例',
+                        align: 'center',
+                        formatter: function (value, row, index) {
+                            return value * 100 + '%';
+                        }
+                    }
+                    ,
+                    {
+                        field: 'perfCount',
+                        title: '绩效提成',
+                        align: 'center',
+                    }
+                    ,
+                    {
+                        field: 'rpCount',
+                        title: '奖惩',
+                        align: 'center',
+                    }
+                    ,
+                    {
+                        field: 'allCount',
+                        title: '合计',
+                        align: 'center',
+                    }
+                    ,
+                    {
+                        field: 'creator',
+                        title: '创建人',
+                        align: 'center',
+                        width: 80
+                    }
+                    ,
+                    {
+                        field: 'createdTim',
+                        title: '创建时间',
+                        align: 'center',
+                        width: 170
+                    }
+                    ,
+                    {
+                        field: 'changer',
+                        title: '修改人',
+                        align: 'center',
+                        width: 80
+                    }
+                    ,
+                    {
+                        field: 'changedTim',
+                        title: '修改时间',
+                        align: 'center',
+                        width: 170
+                    }
+                ]],
+                rownumbers: true,
+                pageSize: 20,
+                pagination: true
+            });
+            $('#payRecordWindow').window({
+                title: "打印预览",
+                tools: '#payRecordWindow_t',
+                width: 1000,
+                height: 400,
+                modal: true,
+                closed: true
+            });
+        });
+    </script>
+</head>
+<body>
+<div id="payRecord_tb">
+    <shiro:hasPermission name="payRecord:find">薪资日期：<input id="payDate" name="payDate"></input>
+        员工名称：<input id="empCode" name="empCode"></input>
+        <a id="payRecord_tb_search" href="#" class="easyui-linkbutton"
+           iconCls="icon-search"
+           plain="true">Search</a></shiro:hasPermission>
+    <shiro:hasPermission name="payRecord:add"><a id="payRecord_tb_add" href="#" class="easyui-linkbutton"
+                                                 iconCls="icon-add"
+                                                 plain="true">Add</a></shiro:hasPermission>
+    <shiro:hasPermission name="payRecord:update"><a id="payRecord_tb_edit" href="#" class="easyui-linkbutton"
+                                                    iconCls="icon-edit"
+                                                    plain="true">Edit</a></shiro:hasPermission>
+    <shiro:hasPermission name="payRecord:delete"><a id="payRecord_tb_cancel" href="#" class="easyui-linkbutton"
+                                                    iconCls="icon-cancel"
+                                                    plain="true">Cancel</a></shiro:hasPermission>
+    <shiro:hasPermission name="payRecord:print"><a id="payRecord_tb_print" href="#" class="easyui-linkbutton"
+                                                   iconCls="icon-print"
+                                                   plain="true">Print</a></shiro:hasPermission>
+</div>
+<table id="payRecordDatagrid"></table>
+<div id="payRecordWindow_t">
+    <a id="payRecordWindow_t_ok" href="#" class="icon-ok"></a>
+</div>
+<div id="payRecordWindow">
+</div>
+</body>
+</html>
